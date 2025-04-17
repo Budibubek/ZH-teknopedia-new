@@ -1,11 +1,12 @@
-from flask import Flask
+from flask import Flask, request
 from flask import jsonify
 from bs4 import BeautifulSoup
 import requests
 from flask import request
-import json
-
+import math
+import pandas as pd
 url = 'https://id.wikipedia.org/'
+
 class Scrape():
     def __init__(self):
         self._endpoint = url
@@ -27,8 +28,8 @@ class Scrape():
             soup = BeautifulSoup(response.content, 'html.parser')
             og_image = soup.find('meta', property='og:image')
             title = soup.find('title').text if soup.find('title') else 'No title found'
-            title = title.replace(' - Wikipedia bahasa Indonesia, ensiklopedia bebas', ' - Ensiklopedia ')
-            title = title.replace('wikipedia', 'Ensiklopedia')
+            title = title.replace(' - Wikipedia bahasa Indonesia, ensiklopedia bebas', ' - Teknopedia ')
+            title = title.replace('wikipedia', 'Teknopedia')
             if og_image:
                     return {
                 'image': og_image['content'],
@@ -66,19 +67,26 @@ class Scrape():
                     ('table', 'box-Very_long plainlinks metadata ambox ambox-style ambox-very_long'),
                     ('table', 'box-Tanpa_referensi plainlinks metadata ambox ambox-content ambox-Refimprove'),
                     ('table', 'plainlinks metadata ambox ambox-style'),
+                    ('table', 'box-Periksa_terjemahan plainlinks metadata ambox ambox-content ambox-rough_translation'),
+                    ('table', 'box-Tambah_referensi plainlinks metadata ambox ambox-content ambox-Refimprove'),
+                    ('table', 'box-Kembangkan_bagian plainlinks metadata ambox mbox-small-left ambox-content'),
                     ('table', 'box-Unreliable_sources plainlinks metadata ambox ambox-content ambox-unreliable_sources'),
+                    ('table', 'nowraplinks'),
+                    ('div', 'nomobile mp-header'),
+                    ('div', 'mp-footer'),
                     ('div', 'side-box side-box-right plainlinks sistersitebox')
                 ]
                 for tag, class_name in elements_to_remove:
                     for element in content_container.find_all(tag, class_=class_name):
                         element.decompose()
-                
+
                 content = content_container.prettify()
             else:
                 content = 'No content found'
             title = soup.find('title').text if soup.find('title') else 'No title found'
-            title = title.replace(' - Wikipedia bahasa Indonesia, ensiklopedia bebas', ' - Ensiklopedia ')
-            title = title.replace('wikipedia', 'Ensiklopedia')
+            title = title.replace(' - Wikipedia bahasa Indonesia, ensiklopedia bebas', ' - Teknopedia ')
+            title = title.replace('wikipedia', 'Teknopedia')
+            content = content.replace('wikipedia', 'Teknopedia')
             if og_image:
                     return {
                 'image': og_image['content'],
@@ -97,12 +105,133 @@ class Scrape():
         else:
             return False
 
+
+class ArtikelSheet:
+    def __init__(self, sheet_id, gid):
+        self.sheet_id = sheet_id
+        self.gid = gid
+        self.url = f"https://docs.google.com/spreadsheets/d/{self.sheet_id}/export?format=csv&gid={self.gid}"        
+        self.df = None
+
+    def ambil_data(self):
+        try:
+            self.df = pd.read_csv(self.url, skiprows=10)
+            print("✅ Data berhasil dimuat.")
+        except Exception as e:
+            print("❌ Gagal memuat data:", e)
+
+    def get_artikel(self):
+        if self.df is None or self.df.empty:
+            print("⚠️ Data belum dimuat atau kosong. Panggil .ambil_data() dulu.")
+            return None
+        try:
+            return self.df.to_dict(orient="records")
+        except Exception as e:
+            print(f"❌ Terjadi kesalahan saat mengambil data: {e}")
+            return None
+
+    def get_artikel_paginated(self, page=1, per_page=10):
+        if self.df is None or self.df.empty:
+            print("⚠️ Data belum dimuat atau kosong. Panggil .ambil_data() dulu.")
+            return None
+        try:
+            # Batasi data hanya sampai kolom I
+            self.df = self.df.iloc[:, :9]
+
+            total_artikel = len(self.df)
+            total_halaman = math.ceil(total_artikel / per_page)
+            page = max(1, min(page, total_halaman))  # hindari halaman invalid
+
+            start = (page - 1) * per_page
+            end = start + per_page
+            paginated_df = self.df.iloc[start:end]
+
+            return {
+                "halaman_sekarang": page,
+                "total_artikel": total_artikel,
+                "total_halaman": total_halaman,
+                "artikel": paginated_df.to_dict(orient="records")
+            }
+        except Exception as e:
+            print(f"❌ Terjadi kesalahan saat paginasi: {e}")
+            return None
+
+    def cari_artikel_by_slug(self, slug):
+        if self.df is None or self.df.empty:
+            print("⚠️ Data belum dimuat atau kosong. Panggil .ambil_data() dulu.")
+            return None
+        try:
+            self.df = self.df.iloc[:, :9]
+            hasil = self.df[self.df['slug'].astype(str).str.lower() == slug.lower()]
+            if hasil.empty:
+                print(f"🔍 Artikel dengan slug '{slug}' tidak ditemukan.")
+                return None
+            return hasil.to_dict(orient="records")[0]  # return satu artikel (pertama)
+        except Exception as e:
+            print(f"❌ Terjadi kesalahan saat mencari slug: {e}")
+            return None
+
+
+
 app = Flask(__name__)
 config_artikel = Scrape()
+
 
 @app.route('/')
 def home():
     return 'Hello, World!'
+
+@app.route('/artikel', methods=['GET'])
+def list_artikel():
+    sheet_id = request.args.get('sheet_id')
+    gid = request.args.get('gid')
+    if not sheet_id or not gid:
+        return jsonify({"error": "sheet_id and gid are required"}), 500
+  
+
+    artikel_sheet = ArtikelSheet(sheet_id, gid)
+    artikel_sheet.ambil_data()
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        data = artikel_sheet.get_artikel_paginated(page, limit)
+        return jsonify({    
+            "payload": data,
+            "status": "success",
+            "message": "Data berhasil diambil"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/artikel/detail', methods=['GET'])
+def detail_artikel():
+    data = request.get_json()
+    if not data or 'sheet_id' not in data or 'gid' not in data:
+        return jsonify({"error": "sheet_id and gid are required"}), 500
+    
+    slug = request.args.get('slug')
+    if not slug:
+        return jsonify({"error": "slug parameter is required"}), 400
+
+    artikel_sheet = ArtikelSheet(data['sheet_id'], data['gid'])
+    artikel_sheet.ambil_data()
+    
+    try:
+        artikel = artikel_sheet.cari_artikel_by_slug(slug)
+        if artikel:
+            return jsonify({
+                "payload": artikel,
+                "status": "success",
+                "message": f"Artikel dengan slug '{slug}' ditemukan"
+            })
+        else:
+            return jsonify({
+                "payload": None,
+                "status": "not_found",
+                "message": f"Artikel dengan slug '{slug}' tidak ditemukan"
+            }), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 @app.route('/about')
 def about():
@@ -229,8 +358,7 @@ def home_page():
 @app.route('/get-content')
 def get_content():
     param = request.args.get('url')
-    enpoint = url + '/wiki/' + param
-    enpoint = enpoint.replace('.html', '')
+    enpoint = url + param    
     config_artikel.set_url(enpoint)
     content = config_artikel.get_content_full(enpoint)
     data = {
