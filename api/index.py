@@ -86,7 +86,6 @@ class Scrape():
             title = soup.find('title').text if soup.find('title') else 'No title found'
             title = title.replace(' - Wikipedia bahasa Indonesia, ensiklopedia bebas', ' - Teknopedia ')
             title = title.replace('wikipedia', 'Teknopedia')
-            content = content.replace('wikipedia', 'Teknopedia')
             if og_image:
                     return {
                 'image': og_image['content'],
@@ -136,7 +135,7 @@ class ArtikelSheet:
             return None
         try:
             # Batasi data hanya sampai kolom I
-            self.df = self.df.iloc[:, :9]
+            self.df = self.df.iloc[:, :9].dropna()
 
             total_artikel = len(self.df)
             total_halaman = math.ceil(total_artikel / per_page)
@@ -145,11 +144,14 @@ class ArtikelSheet:
             start = (page - 1) * per_page
             end = start + per_page
             paginated_df = self.df.iloc[start:end]
+            print(paginated_df)
 
             return {
-                "halaman_sekarang": page,
-                "total_artikel": total_artikel,
-                "total_halaman": total_halaman,
+                "pagination":{
+                    "halaman_sekarang": page,
+                    "total_artikel": total_artikel,
+                    "total_halaman": total_halaman,
+                },
                 "artikel": paginated_df.to_dict(orient="records")
             }
         except Exception as e:
@@ -226,7 +228,7 @@ def detail_artikel():
         else:
             return jsonify({
                 "payload": None,
-                "status": "not_found",
+                "status": "error",
                 "message": f"Artikel dengan slug '{slug}' tidak ditemukan"
             }), 404
     except Exception as e:

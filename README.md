@@ -1,28 +1,156 @@
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fflask3&demo-title=Flask%203%20%2B%20Vercel&demo-description=Use%20Flask%203%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fflask3-python-template.vercel.app%2F&demo-image=https://assets.vercel.com/image/upload/v1669994156/random/flask.png)
+# 📘 Dokumentasi API Scraper Wikipedia Indonesia
 
-# Flask + Vercel
+**Versi:** 1.0  
+**Author:** [Nama Kamu]  
+**Stack:** Python + Flask + BeautifulSoup + Google Sheets
 
-This example shows how to use Flask 3 on Vercel with Serverless Functions using the [Python Runtime](https://vercel.com/docs/concepts/functions/serverless-functions/runtimes/python).
+---
 
-## Demo
+## 🚀 Cara Menjalankan Project
 
-https://flask-python-template.vercel.app/
+### 🔧 Requirements
 
-## How it Works
-
-This example uses the Web Server Gateway Interface (WSGI) with Flask to enable handling requests on Vercel with Serverless Functions.
-
-## Running Locally
+Install dependencies terlebih dahulu:
 
 ```bash
-npm i -g vercel
-vercel dev
+pip install flask requests beautifulsoup4
 ```
 
-Your Flask application is now available at `http://localhost:3000`.
+### ▶️ Jalankan Server
 
-## One-Click Deploy
+```bash
+python app.py
+```
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
+API akan berjalan di:
+```
+http://localhost:5000
+```
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fexamples%2Ftree%2Fmain%2Fpython%2Fflask3&demo-title=Flask%203%20%2B%20Vercel&demo-description=Use%20Flask%203%20on%20Vercel%20with%20Serverless%20Functions%20using%20the%20Python%20Runtime.&demo-url=https%3A%2F%2Fflask3-python-template.vercel.app%2F&demo-image=https://assets.vercel.com/image/upload/v1669994156/random/flask.png)
+---
+
+## 📂 Format Google Sheet
+
+Google Sheet harus memiliki kolom:
+- `slug` — sebagai parameter pencarian
+- `judul`, `deskripsi`, `gambar`, `konten` — akan diisi otomatis oleh API
+
+---
+
+## 📡 Endpoint API
+
+### 1. `GET /artikel`
+
+Mendapatkan daftar artikel dari Google Sheet.
+
+#### ✅ Query Parameters:
+
+| Nama       | Tipe   | Keterangan                       |
+|------------|--------|----------------------------------|
+| `sheet_id` | string | ID Google Sheet                  |
+| `gid`      | string | ID sheet/tab di dalam dokumen    |
+| `page`     | int    | (Opsional) Halaman               |
+| `limit`    | int    | (Opsional) Jumlah per halaman    |
+
+#### 📥 Contoh Request:
+
+```
+GET /artikel?sheet_id=1abc123xyz&gid=0&page=1&limit=10
+```
+
+#### 📤 Contoh Response:
+
+```json
+{
+  "data": [
+    {
+      "judul": "Contoh Artikel",
+      "slug": "contoh-artikel",
+      "deskripsi": "Ini adalah contoh deskripsi.",
+      "gambar": "https://...",
+      "konten": "Isi konten lengkap artikel..."
+    }
+  ],
+  "total": 100,
+  "page": 1,
+  "limit": 10
+}
+```
+
+---
+
+### 2. `GET /artikel/detail`
+
+Mendapatkan detail artikel berdasarkan slug.
+
+#### ✅ Query Parameters:
+
+| Nama       | Tipe   | Keterangan                         |
+|------------|--------|------------------------------------|
+| `sheet_id` | string | ID Google Sheet                    |
+| `gid`      | string | ID sheet/tab di dalam dokumen      |
+| `slug`     | string | Slug artikel yang ingin diambil    |
+
+#### 📥 Contoh Request:
+
+```
+GET /artikel/detail?sheet_id=1abc123xyz&gid=0&slug=sejarah-indonesia
+```
+
+#### 📤 Contoh Response:
+
+```json
+{
+  "judul": "Sejarah Indonesia",
+  "slug": "sejarah-indonesia",
+  "deskripsi": "Penjelasan singkat sejarah Indonesia...",
+  "gambar": "https://...",
+  "konten": "Isi artikel sejarah Indonesia..."
+}
+```
+
+---
+
+### 3. `GET /scrape`
+
+Melakukan scraping konten dari Wikipedia Indonesia dan menyimpan hasilnya ke Google Sheet.
+
+#### ✅ Query Parameters:
+
+| Nama       | Tipe   | Keterangan                                |
+|------------|--------|-------------------------------------------|
+| `sheet_id` | string | ID Google Sheet                           |
+| `gid`      | string | ID sheet/tab di dalam dokumen             |
+
+> Scraper ini mengambil semua slug di kolom pertama (A), lalu mengakses Wikipedia Indonesia berdasarkan slug tersebut.
+
+#### 📥 Contoh Request:
+
+```
+GET /scrape?sheet_id=1abc123xyz&gid=0
+```
+
+#### 📤 Contoh Response:
+
+```json
+{
+  "message": "Scraping selesai.",
+  "jumlah_data": 5,
+  "waktu": "2025-04-16T12:00:00"
+}
+```
+
+---
+
+## ⚠️ Catatan
+
+- Pastikan Google Sheet kamu bisa diakses publik (share: **Anyone with the link**).
+- Slug Wikipedia adalah bagian akhir dari URL. Misalnya:  
+  `https://id.wikipedia.org/wiki/Sejarah_Indonesia`  
+  maka `slug`-nya adalah `Sejarah_Indonesia`.
+
+---
+
+## 📎 License
+
+MIT License
