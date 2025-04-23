@@ -114,7 +114,7 @@ class ArtikelSheet:
 
     def ambil_data(self):
         try:
-            self.df = pd.read_csv(self.url, skiprows=10)
+            self.df = pd.read_csv(self.url)
             print("✅ Data berhasil dimuat.")
         except Exception as e:
             print("❌ Gagal memuat data:", e)
