@@ -143,6 +143,12 @@ class ArtikelSheet:
 
             start = (page - 1) * per_page
             end = start + per_page
+            # Filter out rows where the date has not passed
+            self.df['date'] = pd.to_datetime(self.df['date'], errors='coerce')  # Ensure 'date' is in datetime format
+            today = pd.Timestamp.now()
+            self.df = self.df[self.df['date'] <= today]  # Keep only rows where the date is in the past or today
+
+            self.df = self.df.sort_values(by='date', ascending=False)  # Sort by date in descending order
             paginated_df = self.df.iloc[start:end]
             print(paginated_df)
 
