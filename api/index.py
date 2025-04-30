@@ -313,11 +313,63 @@ def artikel_by_category():
         }), 404
     except Exception as e:
       return jsonify({"error": str(e)}), 500
+        
+def get_category_terbanyak(self, top_n=10):
+        if self.df is None or self.df.empty:
+            print("⚠️ Data belum dimuat atau kosong. Panggil .ambil_data() dulu.")
+            return None
+        try:
+            self.df['category'] = self.df['category'].astype(str).str.lower()
+            kategori_terpisah = self.df['category'].str.split(',')
+
+            # Flatten list kategori
+            semua_kategori = kategori_terpisah.explode().str.strip()
+            jumlah_per_kategori = semua_kategori.value_counts().head(top_n)
+
+            hasil = [
+                {"category": kategori, "jumlah_artikel": jumlah}
+                for kategori, jumlah in jumlah_per_kategori.items()
+            ]
+            return hasil
+
+        except Exception as e:
+            print(f"❌ Terjadi kesalahan saat mengambil kategori terbanyak: {e}")
+            return None
+        
     
 @app.route('/about')
 def about():
     return 'About'
 
+@app.route('/artikel/category-terbanyak', methods=['GET'])
+def category_terbanyak():
+        sheet_id = request.args.get('sheet_id')
+        gid = request.args.get('gid')
+        
+        top_n = int(request.args.get('top', 10))  # Default to top 10 categories
+
+        if not sheet_id or not gid:
+            return jsonify({"error": "sheet_id and gid are required"}), 500
+
+        artikel_sheet = ArtikelSheet(sheet_id, gid)
+        artikel_sheet.ambil_data()
+
+        try:
+            data = artikel_sheet.get_category_terbanyak(top_n)
+            if data:
+                return jsonify({
+                    "payload": data,
+                    "status": "success",
+                    "message": "Kategori terbanyak berhasil diambil"
+                })
+            else:
+                return jsonify({
+                    "payload": None,
+                    "status": "error",
+                    "message": "Tidak ada kategori yang ditemukan"
+                }), 404
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 @app.route('/portal')
 def portal_artikel():
     max_links = request.args.get('max', default=1, type=int)

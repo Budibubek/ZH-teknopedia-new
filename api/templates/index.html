@@ -133,6 +133,51 @@
         </div>
       </div>
 
+      <!-- GET /artikel/category-terbanyak -->
+      <div class="accordion-item">
+        <h2 class="accordion-header" id="headingCategoryTerbanyak">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCategoryTerbanyak" aria-expanded="false" aria-controls="collapseCategoryTerbanyak">
+            GET /artikel/category-terbanyak
+          </button>
+        </h2>
+        <div id="collapseCategoryTerbanyak" class="accordion-collapse collapse" aria-labelledby="headingCategoryTerbanyak" data-bs-parent="#apiDocs">
+          <div class="accordion-body">
+            <p>Mengambil daftar kategori dengan jumlah artikel terbanyak.</p>
+            <strong>Query Parameters:</strong>
+            <ul>
+              <li><code>sheet_id</code> (wajib)</li>
+              <li><code>gid</code> (wajib)</li>
+              <li><code>top</code> (opsional, default = 10)</li>
+            </ul>
+            <strong>Contoh Response Sukses:</strong>
+            <pre><code>{
+  "payload": [
+    {
+      "category": "Politik",
+      "count": 25
+    },
+    {
+      "category": "Ekonomi",
+      "count": 20
+    },
+    {
+      "category": "Teknologi",
+      "count": 15
+    }
+  ],
+  "status": "success",
+  "message": "Kategori terbanyak berhasil diambil"
+}</code></pre>
+            <strong>Contoh Response Error:</strong>
+            <pre><code>{
+  "payload": null,
+  "status": "error",
+  "message": "Tidak ada kategori yang ditemukan"
+}</code></pre>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
