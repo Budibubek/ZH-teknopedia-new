@@ -178,6 +178,50 @@ class ArtikelSheet:
         except Exception as e:
             print(f"❌ Terjadi kesalahan saat mencari slug: {e}")
             return None
+    
+    def get_artikel_by_category(self, category_yang_dicari, page=1, per_page=10):
+        if self.df is None or self.df.empty:
+            print("⚠️ Data belum dimuat atau kosong. Panggil .ambil_data() dulu.")
+            return None
+        try:
+            self.df = self.df.iloc[:, :9]  # Batasi kolom sampai kolom I
+            self.df['category'] = self.df['category'].astype(str).str.lower()
+            category_yang_dicari = category_yang_dicari.lower().strip()
+
+            # Pastikan kolom 'date' dalam format datetime
+            self.df['date'] = pd.to_datetime(self.df['date'], errors='coerce')
+            today = pd.Timestamp.now()
+            self.df = self.df[self.df['date'] <= today]
+
+            # Filter berdasarkan category (case-insensitive, pisah koma)
+            hasil = self.df[self.df['category'].str.contains(rf'\b{category_yang_dicari}\b', regex=True)]
+
+            if hasil.empty:
+                print(f"🔍 Tidak ada artikel dengan kategori '{category_yang_dicari}'.")
+                return None
+
+            hasil = hasil.sort_values(by='date', ascending=False)
+
+            total_artikel = len(hasil)
+            total_halaman = math.ceil(total_artikel / per_page)
+            page = max(1, min(page, total_halaman))  # Hindari page invalid
+
+            start = (page - 1) * per_page
+            end = start + per_page
+            paginated_df = hasil.iloc[start:end]
+
+            return {
+                "pagination": {
+                    "halaman_sekarang": page,
+                    "total_artikel": total_artikel,
+                    "total_halaman": total_halaman,
+                },
+                "artikel": paginated_df.to_dict(orient="records")
+            }
+
+        except Exception as e:
+            print(f"❌ Terjadi kesalahan saat mencari category dengan pagination: {e}")
+            return None
 
 
 
@@ -378,7 +422,36 @@ def detail_artikel():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/artikel/category', methods=['GET'])
+def artikel_by_category():
+   
+    sheet_id = request.args.get('sheet_id')
+    gid = request.args.get('gid')
+    category = request.args.get('category')
+    if not sheet_id or not gid or not category:
+      return jsonify({"error": "sheet_id, gid, and category are required"}), 500
 
+    artikel_sheet = ArtikelSheet(sheet_id, gid)
+    artikel_sheet.ambil_data()
+    try:
+      page = int(request.args.get('page', 1))
+      limit = int(request.args.get('limit', 10))
+      data = artikel_sheet.get_artikel_by_category(category, page, limit)
+      if data:
+        return jsonify({
+          "payload": data,
+          "status": "success",
+          "message": f"Artikel dengan kategori '{category}' berhasil diambil"
+        })
+      else:
+        return jsonify({
+          "payload": None,
+          "status": "error",
+          "message": f"Tidak ada artikel dengan kategori '{category}'"
+        }), 404
+    except Exception as e:
+      return jsonify({"error": str(e)}), 500
+    
 @app.route('/about')
 def about():
     return 'About'
