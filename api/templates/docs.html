@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Masukkan konten halaman home di sini -->
+<!-- Hero Section -->
+<div class="relative bg-white overflow-hidden">
+    <div class="max-w-7xl mx-auto">
+        <div class="relative z-10 pb-8 bg-white sm:pb-16 md:pb-20 lg:max-w-2xl lg:w-full lg:pb-28 xl:pb-32">
+            <main class="mt-10 mx-auto max-w-7xl px-4 sm:mt-12 sm:px-6 md:mt-16 lg:mt-20 lg:px-8 xl:mt-28">
+                <div class="sm:text-center lg:text-left">
+                    <h1 class="text-4xl tracking-tight font-extrabold text-gray-900 sm:text-5xl md:text-6xl">
+                        <span class="block">API Documentation</span>
+                        <span class="block text-indigo-600">Sheet2Blog Platform</span>
+                    </h1>
+                    <p
+                        class="mt-3 text-base text-gray-500 sm:mt-5 sm:text-lg sm:max-w-xl sm:mx-auto md:mt-5 md:text-xl lg:mx-0">
+                        Learn how to integrate with our API to transform your Google Sheets into a beautiful blog.
+                    </p>
+                </div>
+            </main>
+        </div>
+    </div>
+</div>
+
+<!-- Endpoints Section -->
+<div id="endpoints" class="py-12 bg-gray-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:text-center mb-10">
+            <h2 class="text-base text-indigo-600 font-semibold tracking-wide uppercase">API Endpoints</h2>
+            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                Available Endpoints
+            </p>
+        </div>
+
+        <div class="space-y-8">
+            <!-- GET / -->
+            <!-- <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900">GET /</h3>
+                    <p class="mt-2 text-gray-500">Returns a simple text to indicate that the server is active.</p>
+                    <div class="mt-4">
+                        <strong>Example Response:</strong>
+                        <pre class="code-block mt-2">Hello, World!</pre>
+                    </div>
+                </div>
+            </div> -->
+
+            <!-- GET /artikel -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900">GET /artikel</h3>
+                    <p class="mt-2 text-gray-500">Retrieves a list of articles from Google Spreadsheet.</p>
+                    <div class="mt-4">
+                        <strong>Query Parameters:</strong>
+                        <ul class="list-disc list-inside mt-2 text-gray-500">
+                            <li><code>sheet_id</code> (required)</li>
+                            <li><code>gid</code> (required)</li>
+                            <li><code>page</code> (optional, default = 1)</li>
+                            <li><code>limit</code> (optional, default = 10)</li>
+                        </ul>
+                        <strong class="block mt-4">Example Response:</strong>
+                        <pre class="code-block mt-2">{
+  "payload": {
+    "pagination": {
+      "halaman_sekarang": 1,
+      "total_artikel": 100,
+      "total_halaman": 10
+    },
+    "artikel": [
+      {
+        "title": "Article Title",
+        "category": "Category",
+        "date": "2024-03-20",
+        "slug": "article-slug"
+      }
+    ]
+  },
+  "status": "success",
+  "message": "Data berhasil diambil"
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GET /artikel/detail -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900">GET /artikel/detail</h3>
+                    <p class="mt-2 text-gray-500">Retrieves a single article by its slug.</p>
+                    <div class="mt-4">
+                        <strong>Query Parameters:</strong>
+                        <ul class="list-disc list-inside mt-2 text-gray-500">
+                            <li><code>slug</code> (required)</li>
+                        </ul>
+                        <strong class="block mt-4">Request Body:</strong>
+                        <pre class="code-block mt-2">{
+  "sheet_id": "...",
+  "gid": "..."
+}</pre>
+                        <strong class="block mt-4">Example Response:</strong>
+                        <pre class="code-block mt-2">{
+  "payload": {
+    "title": "Article Title",
+    "content": "Article content...",
+    "category": "Category",
+    "date": "2024-03-20",
+    "slug": "article-slug"
+  },
+  "status": "success",
+  "message": "Artikel ditemukan"
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GET /artikel/category -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900">GET /artikel/category</h3>
+                    <p class="mt-2 text-gray-500">Retrieves articles by category.</p>
+                    <div class="mt-4">
+                        <strong>Query Parameters:</strong>
+                        <ul class="list-disc list-inside mt-2 text-gray-500">
+                            <li><code>sheet_id</code> (required)</li>
+                            <li><code>gid</code> (required)</li>
+                            <li><code>category</code> (required)</li>
+                            <li><code>page</code> (optional, default = 1)</li>
+                            <li><code>limit</code> (optional, default = 10)</li>
+                        </ul>
+                        <strong class="block mt-4">Example Response:</strong>
+                        <pre class="code-block mt-2">{
+  "payload": {
+    "pagination": {
+      "halaman_sekarang": 1,
+      "total_artikel": 25,
+      "total_halaman": 3
+    },
+    "artikel": [
+      {
+        "title": "Article Title",
+        "category": "Category",
+        "date": "2024-03-20",
+        "slug": "article-slug"
+      }
+    ]
+  },
+  "status": "success",
+  "message": "Artikel dengan kategori 'Category' berhasil diambil"
+}</pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GET /artikel/category-terbanyak -->
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="p-6">
+                    <h3 class="text-lg font-medium text-gray-900">GET /artikel/category-terbanyak</h3>
+                    <p class="mt-2 text-gray-500">Retrieves categories with the most articles.</p>
+                    <div class="mt-4">
+                        <strong>Query Parameters:</strong>
+                        <ul class="list-disc list-inside mt-2 text-gray-500">
+                            <li><code>sheet_id</code> (required)</li>
+                            <li><code>gid</code> (required)</li>
+                            <li><code>top</code> (optional, default = 10)</li>
+                        </ul>
+                        <strong class="block mt-4">Example Response:</strong>
+                        <pre class="code-block mt-2">{
+  "payload": [
+    {
+      "category": "Politik",
+      "count": 25
+    },
+    {
+      "category": "Ekonomi",
+      "count": 20
+    },
+    {
+      "category": "Teknologi",
+      "count": 15
+    }
+  ],
+  "status": "success",
+  "message": "Kategori terbanyak berhasil diambil"
+}</pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Examples Section -->
+<div id="examples" class="py-12 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="lg:text-center mb-10">
+            <h2 class="text-base text-indigo-600 font-semibold tracking-wide uppercase">Examples</h2>
+            <p class="mt-2 text-3xl leading-8 font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+                Integration Examples
+            </p>
+        </div>
+
+        <div class="prose prose-indigo prose-lg text-gray-500 mx-auto">
+            <h3>Required Sheet Columns</h3>
+            <ul>
+                <li><code>title</code> - Article title</li>
+                <li><code>content</code> - Article content</li>
+                <li><code>date</code> - Publication date</li>
+                <li><code>category</code> - Article category</li>
+                <li><code>slug</code> - URL-friendly article identifier</li>
+            </ul>
+
+            <h3>Getting Sheet ID and GID</h3>
+            <p>From your Google Sheets URL:</p>
+            <pre class="code-block">
+https://docs.google.com/spreadsheets/d/[SHEET_ID]/edit#gid=[GID]</pre>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -122,6 +122,29 @@ class ArtikelSheet:
         except Exception as e:
             print(f"❌ Terjadi kesalahan saat mencari category dengan pagination: {e}")
             return None
+        
+    def get_category_terbanyak(self, top_n=10):
+        if self.df is None or self.df.empty:
+            print("⚠️ Data belum dimuat atau kosong. Panggil .ambil_data() dulu.")
+            return None
+        try:
+            self.df['category'] = self.df['category'].astype(str).str.lower()
+            kategori_terpisah = self.df['category'].str.split(',')
+
+            # Flatten list kategori
+            semua_kategori = kategori_terpisah.explode().str.strip()
+            jumlah_per_kategori = semua_kategori.value_counts().head(top_n)
+
+            hasil = [
+                {"category": kategori, "jumlah_artikel": jumlah}
+                for kategori, jumlah in jumlah_per_kategori.items()
+            ]
+            return hasil
+
+        except Exception as e:
+            print(f"❌ Terjadi kesalahan saat mengambil kategori terbanyak: {e}")
+            return None
+
 
 
 
@@ -136,5 +159,5 @@ sheet = ArtikelSheet(
 sheet.ambil_data()
 
 # Ambil artikel ke-12 (baris ke-11 karena index mulai dari 0)
-artikel = sheet.get_artikel_by_category("bisnis")
+artikel = sheet.get_category_terbanyak(5)
 print(artikel)

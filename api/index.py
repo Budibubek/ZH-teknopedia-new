@@ -231,7 +231,10 @@ config_artikel = Scrape()
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    return render_template('home.html')
+@app.route('/docs')
+def docs():
+    return render_template('docs.html')
 
 @app.route('/artikel', methods=['GET'])
 def list_artikel():
