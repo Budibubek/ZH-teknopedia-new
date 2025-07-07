@@ -5,7 +5,7 @@ import requests
 from flask import request
 import math
 import pandas as pd
-url = 'https://en.wikipedia.org/'
+url = 'https://zh.wikipedia.org/'
 
 class Scrape():
     def __init__(self):
